@@ -1,5 +1,5 @@
 all: 
-	gcc src/backlight.c -o backlight
+	gcc src/backlight.c -o backlight_c
 
 clean: 
-	rm -rf backlight 
+	rm -rf backlight_c 
