@@ -18,7 +18,7 @@ int inc_brightness(char* str_current, char* str_inc) {
     int current_val = strtol(str_current, NULL, 10);
     current_val += strtol(str_inc, NULL, 10);
 
-    return current_val;
+    return (current_val > 255) ? 255 : current_val;
 }
 
 
@@ -26,7 +26,7 @@ int dec_brightness(char* str_current, char* str_dec) {
     int current_val = strtol(str_current, NULL, 10);
     current_val -= strtol(str_dec, NULL, 10);
 
-    return current_val;
+    return (current_val < 0) ? 0 : current_val;
 }
 
 
