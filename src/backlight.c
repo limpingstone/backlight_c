@@ -18,7 +18,6 @@ int inc_brightness(char* str_current, char* str_inc) {
     int current_val = strtol(str_current, NULL, 10);
     current_val += strtol(str_inc, NULL, 10);
 
-    printf("Current brightness: %d\n", current_val);
     return current_val;
 }
 
@@ -31,8 +30,13 @@ int dec_brightness(char* str_current, char* str_dec) {
 }
 
 
-int write_to_file(const char* str) {
-    return 1;
+void write_to_file(int fd, int new_val) {
+    char write_buff[64];
+    sprintf(write_buff, "%d", new_val);
+
+    if (write(fd, write_buff, strlen(write_buff)) < 0) {
+        perror("error writing to file");
+    }
 }
 
 
@@ -59,10 +63,10 @@ int main(int argc, char *argv[]) {
 
             // increase or decrease brightness
             if (!strcmp(argv[1], "inc")) {
-                inc_brightness(fd_buff, argv[2]);
+                write_to_file(fd, inc_brightness(fd_buff, argv[2]));
 
             } else if (!strcmp(argv[1], "dec")) {
-                dec_brightness(fd_buff, argv[2]);
+                write_to_file(fd, dec_brightness(fd_buff, argv[2]));
 
             } else {
                 fprintf(stderr, "invalid option \'%s\'\n\n", argv[1]);
