@@ -1,5 +1,5 @@
 all: 
-	gcc src/backlight.c -o backlight_c
+	gcc src/backlight.c -Wall -Wextra -o backlight_c
 
 clean: 
 	rm -rf backlight_c 

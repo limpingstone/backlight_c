@@ -15,16 +15,34 @@ void print_usage() {
 
 
 int inc_brightness(char* str_current, char* str_inc) {
-    int current_val = strtol(str_current, NULL, 10);
-    current_val += strtol(str_inc, NULL, 10);
+
+    char* endptr;
+    int current_val = strtol(str_current, &endptr, 10);
+    if (*endptr != '\0') {
+        return -1;
+    }
+
+    current_val += strtol(str_inc, &endptr, 10);
+    if (*endptr != '\0') {
+        return -1;
+    }
 
     return (current_val > 255) ? 255 : current_val;
 }
 
 
 int dec_brightness(char* str_current, char* str_dec) {
-    int current_val = strtol(str_current, NULL, 10);
-    current_val -= strtol(str_dec, NULL, 10);
+
+    char* endptr;
+    int current_val = strtol(str_current, &endptr, 10);
+    if (*endptr != '\0') {
+        return -1;
+    }
+
+    current_val -= strtol(str_dec, &endptr, 10);
+    if (*endptr != '\0') {
+        return -1;
+    }
 
     return (current_val < 0) ? 0 : current_val;
 }
@@ -35,7 +53,7 @@ void write_to_file(int fd, int new_val) {
     sprintf(write_buff, "%d", new_val);
 
     if (write(fd, write_buff, strlen(write_buff)) < 0) {
-        perror("error writing to file");
+        perror("write");
     }
 }
 
@@ -52,34 +70,54 @@ int main(int argc, char *argv[]) {
         // If the brightness file is successfully opened
         if (fd > -1) {
             char fd_buff[64];
-            char* buff_ptr = fd_buff;
             memset(fd_buff, 0, sizeof(fd_buff));
 
             // read in current brightness
-            while (read(fd, buff_ptr, sizeof(char)) && *buff_ptr != '\n') {
-                buff_ptr++;
+            for (size_t i = 0; i < sizeof(fd_buff); i++) {
+
+                // read error
+                if (read(fd, fd_buff + i, 1) < 0) {
+                    perror("read");
+                    return 1;
+                }
+
+                // reached end of file
+                if (fd_buff[i] == '\n') {
+                    fd_buff[i] = '\0';
+                    break;
+                }
             }
-            *buff_ptr = '\0';
+
+            printf("current brightness: %s\n", fd_buff);
 
             // increase or decrease brightness
+            int current_val = -1;
             if (!strcmp(argv[1], "inc")) {
-                write_to_file(fd, inc_brightness(fd_buff, argv[2]));
+                current_val = inc_brightness(fd_buff, argv[2]);
 
             } else if (!strcmp(argv[1], "dec")) {
-                write_to_file(fd, dec_brightness(fd_buff, argv[2]));
+                current_val = dec_brightness(fd_buff, argv[2]);
 
             } else {
                 fprintf(stderr, "invalid option \'%s\'\n\n", argv[1]);
                 print_usage();
             }
 
+            printf("current brightness: %d\n", current_val);
+
+            // if new brightness value is valid then write to file
+            if (current_val > -1)
+                write_to_file(fd, current_val);
+
+
             // close the file after changing brightness
             if (close(fd) < 0)
-                perror("error closing file");
+                perror("close");
 
             return 0;
         }
-        perror("error changing backlight brightness");
+
+        perror("open");
     }
 
     return -1;
